@@ -1,0 +1,63 @@
+__________________________________________________________________________
+                                                             
+
+Welcome to MCF Application MP 0 !
+
+version: 2.0.0                                                   
+                                                             
+CopyRight (c) BUPT. All Rights reserved. 2010-2012. 
+                                                             
+================= Powered by MCF 2.0.0(Build: Sep 22 2012-15:39:55) ! ==========
+__________________________________________________________________________
+
+please set env 'UNIDIR'. now it will be set to './'
+WARNING: env HOSTID not specified in .bashrc or .bash_profile. We will use the default value: 1
+SC init error: can not open file './etc/mpc.env'. We will use default env value.
+Opening server for mconsole succeed, but no mconsole connected and we will accept it later. local_ip:127.0.0.1, port:6668.
+Heartbeat disabled.
+Read env get accessMode 0
+initPsaRtc psaid: 18zyd
+listen on media: 9870, wcs: 9871
+succuss init
+RTC PSA init successed
+5 app logic programs, 5 setup OK.
+
+MCF MP 0 start-up ok.
+
+
+[MP 0] MCF has been idle for 5 minutes.
+new wcs client coming
+accept a connection from wcs server id 2
+,  10.109.247.129:43043
+new socket is: 5
+select return 1
+RecvThread: socket closed by the other side.
+[MP 0] MCF has been idle for 10 minutes.
+new wcs client coming
+accept a connection from wcs server id 2
+,  10.109.247.129:52879
+new socket is: 5
+[MP 0] MCF has been idle for 15 minutes.
+[MP 0] MCF has been idle for 20 minutes.
+[MP 0] MCF has been idle for 25 minutes.
+[MP 0] MCF has been idle for 30 minutes.
+[MP 0] MCF has been idle for 35 minutes.
+[MP 0] MCF has been idle for 40 minutes.
+[MP 0] MCF has been idle for 45 minutes.
+[MP 0] MCF has been idle for 50 minutes.
+[MP 0] MCF has been idle for 55 minutes.
+[MP 0] MCF has been idle for 60 minutes.
+[MP 0] MCF has been idle for 65 minutes.
+[MP 0] MCF has been idle for 70 minutes.
+[MP 0] MCF has been idle for 75 minutes.
+[MP 0] MCF has been idle for 80 minutes.
+[MP 0] MCF has been idle for 85 minutes.
+[MP 0] MCF has been idle for 90 minutes.
+[MP 0] MCF has been idle for 95 minutes.
+[MP 0] MCF has been idle for 100 minutes.
+[MP 0] MCF has been idle for 105 minutes.
+[MP 0] MCF has been idle for 110 minutes.
+[MP 0] MCF has been idle for 115 minutes.
+[MP 0] MCF has been idle for 120 minutes.
+
+MCF MP 0 SIGNAL received: 8(SIGPIPE: Floating-point exception). The program will exit now...
