@@ -42,6 +42,9 @@ void CRtcCallModule::initState(){
  */
 void CRtcCallModule::sendToDispatcher(TUniNetMsg *pMsg){
 	// 也许该记录下dispatcher的地址
+	printf("CRtcCallModule::sendToDispatcher\n");
+	CTUniNetMsgHelper::print(pMsg);
+
 	if(m_isDispatcherAddrSet){
 		pMsg->tAddr = m_dispatcherAddr;
 	}else{

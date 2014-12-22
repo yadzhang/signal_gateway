@@ -958,6 +958,89 @@ void TSipInfo::print(ostrstream& st)
 
 
 /////////////////////////////////////////////
+//           for class TSipUpdate
+/////////////////////////////////////////////
+PTMsgBody TSipUpdate::clone()
+{
+	PTSipInfo amsg = new TSipInfo();
+	amsg->req_uri                   = req_uri;
+	amsg->content_type              = content_type;
+	amsg->body                      = body;
+	return amsg;
+}
+TSipInfo& TSipUpdate::operator=(const TSipInfo &r)
+{
+	req_uri                   = r.req_uri;
+	content_type              = r.content_type;
+	body                      = r.body;
+	return *this;
+}
+
+BOOL TSipUpdate::operator == (TMsgPara& msg)
+{
+	COMPARE_MSG_BEGIN(TSipInfo,msg)
+
+	COMPARE_FORCE_NEST(TSipUpdate,TSipURI,req_uri)
+	COMPARE_FORCE_NEST(TSipUpdate,TSipContentType,content_type)
+	COMPARE_FORCE_NEST(TSipUpdate,TSipBody,body)
+
+	COMPARE_END
+}
+
+INT TSipUpdate::size()
+{
+	INT tmpSize = 0;
+
+	tmpSize += req_uri.size();
+	tmpSize += content_type.size();
+	tmpSize += body.size();
+
+	return tmpSize;
+}
+
+INT TSipUpdate::encode(CHAR* &buf)
+{
+	req_uri.encode(buf);
+	content_type.encode(buf);
+	body.encode(buf);
+
+	return size();
+}
+
+INT TSipUpdate::decode(CHAR* &buf)
+{
+	req_uri.decode(buf);
+	content_type.decode(buf);
+	body.decode(buf);
+
+	return size();
+}
+
+BOOL TSipUpdate::decodeFromXML(TiXmlHandle& xmlParser,PCGFSM fsm)
+{
+	FILL_FIELD_BEGIN
+
+	FILL_FORCE_NEST(TSipUpdate,TSipURI,req_uri)
+	FILL_FORCE_NEST(TSipUpdate,TSipContentType,content_type)
+	FILL_FORCE_NEST(TSipUpdate,TSipBody,body)
+
+	FILL_FIELD_END
+}
+
+void TSipUpdate::print(ostrstream& st)
+{
+	st<<"==| TSipUpdate =="<<endl;
+	st<<"$req_uri : ";
+	req_uri.print(st);
+	st<<"$content_type : ";
+	content_type.print(st);
+	st<<"$body : ";
+	body.print(st);
+
+}
+
+
+/////////////////////////////////////////////
 //           for class TSipPublish
 /////////////////////////////////////////////
 PTMsgBody TSipPublish::clone()

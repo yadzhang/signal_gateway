@@ -30,7 +30,7 @@ string CSipUserManager::getSipPassword(string sipname)
 
 }
 
-INT CSipUserManager::getSipUser(vector<string> &nameArr)
+INT CSipUserManager::getSipUser(set<string> &nameArr)
 {
 	CHAR pcSQLStatement[512];
 
@@ -38,13 +38,10 @@ INT CSipUserManager::getSipUser(vector<string> &nameArr)
 	CDB::instance()->execSQL(pcSQLStatement);
 	PTSelectResult result = CDB::instance()->getSelectResult();
 
-	//printf("result num :%d\n", result->rowNum);
 	Row * cur = result->pRows;
 	for(int i = 0; i < result->rowNum; ++i)
 	{
-
-		//printf("sipname:: %s\n", cur->arrayField[0].value.stringValue);
-		nameArr.push_back(cur->arrayField[0].value.stringValue);
+		nameArr.insert(cur->arrayField[0].value.stringValue);
 		cur = cur->next;
 	}
 

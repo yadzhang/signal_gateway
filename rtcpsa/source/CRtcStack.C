@@ -12,12 +12,31 @@ CRtcStack::CRtcStack(INT psaid){
 	}
 	
 
-	string tmp = CPropertiesManager::getInstance()->getProperties("rtc.env")->getProperty("RTC_DOMAIN");
+	string tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("RTC_DOMAIN");
 	if(tmp == ""){
 		tmp = "domain1.com";
 	}
 	
 	strcpy(RTC_DOMAIN,tmp.c_str());
+
+	tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("realmAddr");
+	if(tmp == ""){
+		tmp = "open-ims.com";
+	}
+	strcpy(IMS_DOMAIN,tmp.c_str());
+
+	tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("confRealm");
+	if(tmp == ""){
+		tmp = "conf.com";
+	}
+	strcpy(CONF_DOMAIN,tmp.c_str());
+
+	tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("confType");
+	if(tmp != ""){
+		strcpy(CONF_TYPE,tmp.c_str());
+	}
+
+
 	m_pSocket = new CPracticalSocket();
 }
 
@@ -53,8 +72,20 @@ BOOL CRtcStack::convertMsgToUniNetMsg(string strMsg, PTUniNetMsg pMsg){
 		fromStr.append("@"+(string)RTC_DOMAIN);
 		
 
+		string toStr = rtcParser.getTo().c_str();
+		if(!isConfCall(toStr)){
+			pos = toStr.find("@");
+			if(pos == string::npos){
+				toStr.append("@"+(string)IMS_DOMAIN);
+			}
+		}
+		else{
+			toStr.append("@"+(string)CONF_DOMAIN);
+		}
+
+
 		pCtrlMsg->from = fromStr.c_str();
-		pCtrlMsg->to = rtcParser.getTo().c_str();
+		pCtrlMsg->to = toStr.c_str();
 		pCtrlMsg->offerSessionId = roapParser.getOfferSessionId().c_str();
 		pCtrlMsg->answerSessionId = roapParser.getAnswerSessionId().c_str();
 		pMsg->ctrlMsgHdr = pCtrlMsg;
@@ -222,8 +253,15 @@ BOOL CRtcStack::convertUniMsgToPlainMsg(PTUniNetMsg uniMsg, string& plainMsg){
 		
 		}
 
+		string fromStr = pCtrlMsg->from.c_str();
+		i = fromStr.find("@");
+
+		if(i != string::npos){
+			fromStr = fromStr.substr(0,i);
+		}
+
 		CRtcProtocolParser rtcParser(pCtrlMsg->rtcType,
-				pCtrlMsg->from.c_str(),
+				fromStr.c_str(),
 				toStr.c_str(),
 				*roapParser);
 		plainMsg = rtcParser.toPlainString();
@@ -475,3 +513,25 @@ BOOL CRtcStack::sendToWebRTCServerOrMediaGW(const string& offersessionId, const 
 	}
 	return TRUE;
 }
+
+bool CRtcStack::isConfCall(string toStr)
+{
+	string confType = CONF_TYPE;
+	if(confType == ""){
+		return false;
+	}
+	printf("isConfCall: %s\n", confType.c_str());
+
+	if(confType == "XXX" && toStr.size() == confType.size()){
+		if(toStr.compare("000") >= 0
+				&& toStr.compare("999") <= 0){
+			return true;
+		}
+	}
+	else if(confType == toStr){
+		return true;
+	}
+
+	return false;
+}
+
