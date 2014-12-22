@@ -77,22 +77,22 @@ osip_message_t* convertMCF2CtrlMsg(PCTSipCtrlMsg pCtrlMsg, osip_message_t *sip)
 	// from, to
 	convertMCF2OsipFrom(pCtrlMsg->from, from);
 	convertMCF2OsipTo(pCtrlMsg->to, to);
-	if (pCtrlMsg->from.tag.length() == 0)
-	{
-		osip_generic_param_t *tag = NULL;
-		if (OSIP_SUCCESS == osip_from_get_tag(from, &tag))
-		{
-			osip_from_set_tag(from, osip_strdup(tag->gvalue));
-		}
-	}
-	if (pCtrlMsg->to.tag.length() > 0)
-	{
-		osip_generic_param_t *tag = NULL;
-		if (OSIP_SUCCESS == osip_to_get_tag(to, &tag))
-		{
-			osip_to_set_tag(to, osip_strdup(tag->gvalue));
-		}
-	}
+//	if (pCtrlMsg->from.tag.length() == 0)
+//	{
+//		osip_generic_param_t *tag = NULL;
+//		if (OSIP_SUCCESS == osip_from_get_tag(from, &tag))
+//		{
+//			osip_from_set_tag(from, osip_strdup(tag->gvalue));
+//		}
+//	}
+//	if (pCtrlMsg->to.tag.length() > 0)
+//	{
+//		osip_generic_param_t *tag = NULL;
+//		if (OSIP_SUCCESS == osip_to_get_tag(to, &tag))
+//		{
+//			osip_to_set_tag(to, osip_strdup(tag->gvalue));
+//		}
+//	}
 
 	if (sip->from) osip_from_free(sip->from);
 	if (sip->to) osip_to_free(sip->to);

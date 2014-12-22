@@ -35,7 +35,14 @@
 #include <sstream>
 #include <time.h>
 
-string proxy, icscf, realmAddr;
+set<string> m_name_pool;
+map<string, timer *> m_map_timers;
+map<string, UserData *> m_map_userdata;  //save for heartbeat
+
+timers_poll * ptimer_poll;
+
+
+string proxy, icscf, _realmAddr, realmAddr;
 //int count = 0;
 static CHAR* __generateUniqueCallId(CHAR* dst, size_t size,
 		RCTSipAddress from, RCTSipAddress to, RCTSipCallId callId)
@@ -173,6 +180,49 @@ int CExosipStack::sendInitRegister(timer * ptimer)
 
 	return 1;
 }
+
+int CExosipStack::getSipUserFromDB(timer *ptimer){
+
+	set<string> name_pool;
+	CSipUserManager::getSipUser(name_pool);
+	//printf("username unregistered: %d\n", name_pool.size());
+	double interval = 1;
+	double starttime = 0;
+
+	for(set<string>::iterator iter = m_name_pool.begin(); iter != m_name_pool.end(); ++iter){
+		if(name_pool.find(*iter) == name_pool.end()){
+			string uri = (*iter);
+			uri.insert(0, "sip:");
+			m_name_pool.erase(iter);
+			timer * ptimer = m_map_timers[uri];
+			ptimer_poll->timers_poll_del_timer(ptimer);
+			//ptimer->timer_stop();
+		}
+	}
+
+	for(set<string>::iterator iter = name_pool.begin(); iter != name_pool.end(); ++iter)
+	{
+		if(m_name_pool.find(*iter) == m_name_pool.end()){
+			m_name_pool.insert(*iter);
+			starttime += interval;
+			UserData * ud = new UserData;
+			ud->username = (*iter);
+			ud->reg_id = -1;
+			ud->noncecount = 1;
+			ud->cnonce = generateRand();
+			string uri = (*iter);
+			uri.insert(0, "sip:");
+			m_map_userdata.insert(make_pair<string, UserData *> (uri,ud));
+			timer * ptimer = new timer(starttime, sendInitRegister, ud, 1);
+			m_map_timers.insert(make_pair<string, timer *>(uri, ptimer));
+			ptimer_poll->timers_poll_add_timer(ptimer);
+		}
+	}
+	ptimer->timer_modify_internal(10);
+
+	return 0;
+}
+
 
 void CExosipStack::register_process_401(eXosip_event_t * je)
 {
@@ -331,7 +381,7 @@ void CExosipStack::register_process_200(eXosip_event_t * je)
 		if(osip_contact_param_get_byname(contact, "Expires", &params) >= 0){
 			expires = atoi(params->gvalue);
 			expires = expires >> 1;
-			printf("sip-psa: get expires from contact param:%d\n", expires);
+		//	printf("sip-psa: get expires from contact param:%d\n", expires);
 		}
 	}
 
@@ -413,10 +463,13 @@ BOOL CExosipStack::init(USHORT port)
 	if(confType != ""){
 		confServer = "sip:" + properties->getProperty("confServer");
 		if(confServer == ""){
-			confServer = "10.109.247.115:5060";
+			confServer = "sip:10.109.247.115:5060";
+		}
+		confRealm = properties->getIntProperty("confRealm");
+		if(confRealm == ""){
+			confRealm = "conf.com";
 		}
 	}
-
 
 	if(accessMode == 2){
 		ptimer_poll = new timers_poll(128);
@@ -437,30 +490,14 @@ BOOL CExosipStack::init(USHORT port)
 		proxy = properties->getProperty("proxy");
 		proxy = "sip:" + proxy;
 
-		realmAddr = properties->getProperty("realmAddr");
-		realmAddr = "sip:" + realmAddr;
-
+		_realmAddr = properties->getProperty("realmAddr");
+		realmAddr = "sip:" + _realmAddr;
 
 		CSipUserManager::init();
-		CSipUserManager::getSipUser(this->m_name_pool);
-		double interval = 1;
-		double starttime = 0;
-		for(vector<string>::iterator iter = m_name_pool.begin(); iter != m_name_pool.end(); ++iter)
-		{
+		timer * ptimer = new timer(1, getSipUserFromDB, NULL, 1);
+		ptimer_poll->timers_poll_add_timer(ptimer);
 
-			starttime += interval;
-			UserData * ud = new UserData;
-			ud->username = (*iter);
-			ud->reg_id = -1;
-			ud->noncecount = 1;
-			ud->cnonce = generateRand();
-			string uri = (*iter);
-			uri.insert(0, "sip:");
-			m_map_userdata.insert(make_pair<string, UserData *> (uri,ud));
-			timer * ptimer = new timer(starttime, sendInitRegister, ud, 1);
-			m_map_timers.insert(make_pair<string, timer *>(uri, ptimer));
-			ptimer_poll->timers_poll_add_timer(ptimer);
-		}
+
 	}
 	else{
 		icscf = properties->getProperty("icscf");
@@ -524,19 +561,35 @@ void CExosipStack::doActive(void)
 
 			parsed = TRUE;
 
-			osip_message_t *reg = event->request;
+			osip_message_t* ans = NULL;
+			int ret;
 
-			PTSipRegister mcfReg = new TSipRegister();
+			eXosip_lock();
+			ret = eXosip_message_build_answer(event->tid, 501, &ans);
+			if (OSIP_SUCCESS != ret)
+			{
+				psaPrint(m_psaid,
+						"eXosip_message_build_answer error for register!!!\n");
+			}
+			else
+			{
 
-			ExosipTranslator::convertOsipRegister2MCF(reg, *mcfReg);
+				ans->reason_phrase = osip_strdup("Not Implemented");
+				ret = eXosip_message_send_answer(event->tid, 501, ans);
+				if (OSIP_SUCCESS != ret)
+				{
+					psaPrint(m_psaid,"error send answer for register!!!\n"
+							);
+				}
+			}
+			eXosip_unlock();
+			delete pMsg;
 
-			pMsg->msgName = SIP_REGISTER;
-			pMsg->msgBody = mcfReg;
-			pMsg->setMsgBody();
+			DEBUG0(m_psaid, "eXosip event free!");
+			eXosip_event_free(event);
 
-			ExosipTranslator::convertCtrlMsg2MCF(event->request, pCtrlMsg);
+			return;
 
-			this->m_map_branch_tid.put(pCtrlMsg->via.branch.c_str(), event->tid);
 		}
 	}
 	else if(event->request && MSG_IS_OPTIONS(event->request)){
@@ -548,7 +601,7 @@ void CExosipStack::doActive(void)
 			osip_message_t * ans;
 			eXosip_options_build_answer(event->tid, 200, &ans);
 
-			osip_message_set_allow(ans, "ACK, BYE, CANCEL, INFO, INVITE, MESSAGE, NOTIFY, OPTIONS, PRACK, REGISTER, UPDATE");
+			osip_message_set_allow(ans, "ACK, BYE, CANCEL, INFO, INVITE, MESSAGE, OPTIONS, PRACK, REGISTER, UPDATE");
 			osip_message_set_accept(ans, "application/sdp");
 			osip_message_set_accept_language(ans, "da, en-gb; q= 0.8, en;q=0.7");
 			eXosip_options_send_answer(event->tid, 200, ans);
@@ -557,8 +610,6 @@ void CExosipStack::doActive(void)
 	}
 	else
 	{
-		//printf("into switch!!!");
-
 		switch (event->type)
 		{
 		case EXOSIP_REGISTRATION_FAILURE:
@@ -705,7 +756,6 @@ void CExosipStack::doActive(void)
 
 				PTSipInfo mcfInfo = new TSipInfo();
 
-				printf("received Info\n");
 				ExosipTranslator::convertOsipInfo2MCF(info, *mcfInfo);
 
 				pMsg->msgName = SIP_INFO;
@@ -737,7 +787,6 @@ void CExosipStack::doActive(void)
 			parsed = TRUE;
 
 			ExosipTranslator::convertCtrlMsg2MCF(event->request, pCtrlMsg);
-			INT tid = -1;
 
 			osip_cseq_t* cseq = osip_message_get_cseq(event->request);
 			if (NULL != event->response && 487 != event->response->status_code
@@ -756,7 +805,7 @@ void CExosipStack::doActive(void)
 				pCtrlMsg->cseq_method = "ACK";
 				// TODO: uncorect Cseq number
 			}
-			else if (TRUE == this->m_map_branch_tid.get(pCtrlMsg->via.branch.c_str(), tid))
+			else if (!strcmp(event->request->sip_method, "CANCEL"))
 			{
 				// CANCEL is received
 				PTSipCancel mcfCancel = new TSipCancel();
@@ -767,7 +816,7 @@ void CExosipStack::doActive(void)
 				pMsg->msgName = SIP_CANCEL;
 				pMsg->msgBody = mcfCancel;
 				pMsg->setMsgBody();
-			} // transaction is not finished
+			}
 			else
 			{
 				// BYE received
@@ -894,6 +943,7 @@ void CExosipStack::doActive(void)
 						osip_message_t *prack;
 						eXosip_call_build_prack(event->tid, &prack);
 						eXosip_call_send_prack(event->tid, prack);
+
 					}
 				}
 
@@ -1016,6 +1066,7 @@ BOOL CExosipStack::onSend_SIP_RESPONSE(PCTUniNetMsg uniMsg)
 				// HHP: modified by Huang Haiping 2010-09-09 fix crash when build failed
 				ExosipTranslator::convertMCF2OsipResp(*mcfRes, ans);
 
+
 				if(isConfCall(pCtrlMsg->from.url.username.c_str()) == true){
 					osip_route_t *rt;
 					osip_route_init(&rt);
@@ -1038,10 +1089,14 @@ BOOL CExosipStack::onSend_SIP_RESPONSE(PCTUniNetMsg uniMsg)
 					}
 				}
 
+				ExosipTranslator::convertMCF2CtrlMsg(pCtrlMsg, ans);
+
 				char * buf = NULL;
 				size_t len;
 				osip_message_to_str(ans, &buf, &len);
+
 				printf("****answer:\n%s\n", buf);
+
 
 
 				ret = eXosip_call_send_answer(tid, mcfRes->statusCode, ans);

@@ -115,6 +115,9 @@ class TSipReq:public TMsgBody
 		void           print(ostrstream& st);
 };
 
+
+
+
 _CLASSDEF(TSipBye)
 class TSipBye:public TMsgBody
 {
@@ -260,6 +263,30 @@ class TSipInfo:public TMsgBody
 		void           print(ostrstream& st);
 };
 
+_CLASSDEF(TSipUpdate)
+class TSipUpdate:public TMsgBody
+{
+public:
+	TSipURI        req_uri;
+	TSipContentType content_type;
+	TSipBody       body;
+
+	inline         TSipUpdate();
+
+	CHAR*          getMsgName(){ return "TSipUpdate";};
+	TSipInfo       &operator=(const TSipInfo &r);
+	PTMsgBody      clone();
+	BOOL           operator == (TMsgPara&);
+
+	INT            size();
+	INT            encode(CHAR* &buf);
+	INT            decode(CHAR* &buf);
+	BOOL           decodeFromXML(TiXmlHandle& xmlParser,PCGFSM fsm);
+
+	void           print(ostrstream& st);
+};
+
+
 _CLASSDEF(TSipPublish)
 class TSipPublish:public TMsgBody
 {
@@ -378,6 +405,11 @@ inline TSipInfo::TSipInfo()
 {
 
 }
+
+inline TSipUpdate::TSipUpdate()
+{
+}
+
 
 inline TSipPublish::TSipPublish()
 {

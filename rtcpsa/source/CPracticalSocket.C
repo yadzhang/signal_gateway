@@ -354,7 +354,7 @@ bool CPracticalSocket::sendMsg(int clientSock, string msg, bool isSendToMG){
         		if(bytes == -1){
 					printf("SendThread: send() failed.\n");
 					return false;
-				}else if(bytes != msg.length()){
+        		}else if(bytes != msg.length()){
 					printf("SendThread: send message trunked.");
 				}else{
 					//do nothing

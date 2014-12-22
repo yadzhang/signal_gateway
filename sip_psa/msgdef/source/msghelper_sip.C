@@ -233,8 +233,8 @@ void CSipMsgHelper::generateRandomNumberStr(CHAR buf[33])
 	sprintf(buf, "%u", randid);
 }
 
-TSipURI CSipMsgHelper::createSipURI(const CHAR* scheme, const CHAR* userName,
-			const CHAR* host, const CHAR* port)
+TSipURI CSipMsgHelper::createSipURI(const CHAR * scheme, const CHAR * userName,
+		const CHAR * host, const CHAR *  port)
 {
 	TSipURI sipUri;
 	if (scheme) sipUri.scheme = scheme;
