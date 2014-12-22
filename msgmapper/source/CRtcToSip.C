@@ -30,6 +30,7 @@ void CRtcToSip::mapToSipInvite(PTRtcCtrlMsg pRtcCtrl, TUniNetMsg* pDestMsg,
 	TSipInvite* pSipInvite = new TSipInvite();
 
 	// (1) sip req_url,注意是to
+
 	pSipInvite->req_uri = CSipMsgHelper::createSipURI("sip",
 			getUserName(pRtcCtrl->to).c_str(), getHost(pRtcCtrl->to).c_str(), NULL);
 	
@@ -50,6 +51,7 @@ void CRtcToSip::mapToSipInvite(PTRtcCtrlMsg pRtcCtrl, TUniNetMsg* pDestMsg,
 
 	if(accessMode == 1 || accessMode == 2){
 		CVarChar128  newSipName = CUserMapHelper::getMapNewSipUser(pRtcCtrl->from);
+		printf("adsads%s\n", newSipName.c_str());
 		pSipCtrl->from.displayname = getUserName(newSipName).c_str();
 		pSipCtrl->from.url = CSipMsgHelper::createSipURI("sip", getUserName(newSipName).c_str(),
 					getHost(newSipName).c_str(), NULL);
@@ -504,10 +506,11 @@ BOOL CRtcToSip::msgMapToSipError(TUniNetMsg *pSrcMsg, TUniNetMsg *pDestMsg, bool
 string CRtcToSip::getUserName(const CVarChar128& user){
 	string temp = user.c_str();
 	int i = temp.find('@');
+	printf("temp: %s\n", temp.c_str());
 	if(i != -1)
-		return temp.substr(0, i);
+		return (temp.substr(0, i));
 	else
-		return temp;
+		return user.c_str();
 }
 
 string CRtcToSip::getHost(const CVarChar128& user){
@@ -516,5 +519,5 @@ string CRtcToSip::getHost(const CVarChar128& user){
 	if(i != -1)
 		return temp.substr(i + 1);
 	else
-		return NULL;
+		return "";
 }

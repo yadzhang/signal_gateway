@@ -35,6 +35,7 @@ const TUniNetMsgName SIP_PUBLISH      = SIP_BYE + 1;      // 1007
 const TUniNetMsgName SIP_SUBSCRIBE    = SIP_PUBLISH + 1;  // 1008
 const TUniNetMsgName SIP_NOTIFY       = SIP_SUBSCRIBE + 1;// 1009
 const TUniNetMsgName SIP_INFO		  = SIP_NOTIFY + 1;	  //1010
+const TUniNetMsgName SIP_UPDATE		  = SIP_UPDATE + 1;	//1011
 
 
 

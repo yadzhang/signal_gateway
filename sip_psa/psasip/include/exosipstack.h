@@ -27,8 +27,8 @@
 #include <osip2/osip_mt.h>
 #include <osipparser2/headers/osip_www_authenticate.h>
 #include <netinet/in.h>
-#include <vector>
 #include <map>
+#include <algorithm>
 
 #include "MD5Digest.h"
 #include "CPropertiesManager.h"
@@ -39,12 +39,14 @@
 #include "exosiptranslator.h"
 #include "timerpoll.h"
 
+
 typedef struct{
 	string username;
 	int reg_id;
 	string cnonce;
 	int noncecount;
 } UserData;
+
 
 _CLASSDEF(CExosipStack)
 class CExosipStack {
@@ -64,30 +66,29 @@ private:
 	CHashTable<CHAR*, INT> m_map_callid; // call id map
 	CHashTable<CHAR*, INT> m_map_dialogid; // dialog id map
 
-	vector<string> m_name_pool;
-	map<string, timer *> m_map_timers;
+
 	map<string, vector<char *> > m_service_route;
 
-	map<string, UserData *> m_map_userdata;  //save for heartbeat
 
-	timers_poll * ptimer_poll;
 	pthread_t thread_id;
 
 	int accessMode;
 	string confType;
 	string confServer;
+	string confRealm;
 
 private:
 	static void * thread_fun(void * data);
 	static int sendInitRegister(timer *ptimer);
 	static int sendAuthRegister(timer *ptimer);
+	static int getSipUserFromDB(timer *ptimer);
 
 	void register_process_401(eXosip_event_t * je);
 	void register_process_200(eXosip_event_t * je);
 	char * remove_quotes(char * text);
 	char * add_quotes(string text);
 
-	string generateRand();
+	static string generateRand();
 
 	bool isConfCall(string username);
 

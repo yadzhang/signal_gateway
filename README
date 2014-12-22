@@ -13,6 +13,10 @@ use utf-8 encoding to see the content
 1.add sip-psa module into projects
 2.add conference call route according to confType in gateway.env 
 
+#Added on: 2014-12-22 by zhangyadong
+1.modified domain setting, webrtc client should dail ims number or conference number without domain
+2.add UPDATE message body
+
 工程目录结构
 辅助文件目录:
 doc 存放有关文档,可使用make doc命令生成.

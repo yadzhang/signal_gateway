@@ -139,7 +139,6 @@ char * base64_decode_string( const char *buf, unsigned int len, int *newlen )
 		out[j++]=((x3 & 0x03)<<6) | (x4 & 0x3F);
 	}
 
-	printf("i=%d\n", i);
 	if (i<len) {
 		x1 = base64_val(buf[i]);
 		if (i+1<len)

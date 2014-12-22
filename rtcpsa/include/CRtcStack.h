@@ -33,6 +33,10 @@ private:
 	BOOL convertUniMsgToPlainMsg(PTUniNetMsg uniMsg, string& plainMsg);
 	INT LOGADDR_DISPATCHER;
 	char RTC_DOMAIN[128];
+	char IMS_DOMAIN[128];
+	char CONF_DOMAIN[128];
+	char CONF_TYPE[30];
+	bool isConfCall(string toStr);
 	BOOL sendToWebRTCServerOrMediaGW(const string& key, const string& msg, const bool isSendToMg);
 };
 
