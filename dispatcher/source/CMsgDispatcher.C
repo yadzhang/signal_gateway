@@ -122,6 +122,7 @@ void CMsgDispatcher::handleMsgFromSipPSA(TUniNetMsg* msg){
 	case SIP_ACK:
 	case SIP_CANCEL:
 	case SIP_INFO:
+	case SIP_UPDATE:
 	case SIP_BYE:
 	case SIP_RESPONSE:
 	{

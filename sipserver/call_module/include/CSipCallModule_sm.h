@@ -17,6 +17,7 @@
 class CSipCallModState;
 class CSipCallModState_IDLE;
 class CSipCallModState_CALLPROC;
+class CSipCallModState_RECVUPDATE;
 class CSipCallModState_SUCCESS;
 class CSipCallModState_ACTIVE;
 
@@ -47,6 +48,8 @@ public:
     virtual void onInvite(CSipCallModuleContext& context, TUniNetMsg* msg);
     virtual void onResponse(CSipCallModuleContext& context, TUniNetMsg* msg);
     virtual void onInfo(CSipCallModuleContext& context, TUniNetMsg* msg);
+    virtual void onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg);
+
     virtual void onTimeOut(CSipCallModuleContext& context, TTimeMarkExt timerMark);
 
 
@@ -61,10 +64,11 @@ public:
 
     static CSipCallModState_IDLE IDLE;
     static CSipCallModState_CALLPROC CALLPROC;
+    static CSipCallModState_RECVUPDATE RECVUPDATE;
     static CSipCallModState_SUCCESS SUCCESS;
     static CSipCallModState_ACTIVE ACTIVE;
     static CSipCallModState_RELEASE RELEASE;
-//modified(1 lines) by zhangyadong on 2014.7.13
+
 	static CSipCallModState_CLOSED CLOSED;
 }; 
 
@@ -78,6 +82,7 @@ public:
     {};
 
     virtual void onInvite(CSipCallModuleContext& context, TUniNetMsg* msg);
+    virtual void onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg);
     virtual void onResponse(CSipCallModuleContext& context, TUniNetMsg* msg);
     virtual void onAck(CSipCallModuleContext& context, TUniNetMsg* msg);
     virtual void onCancel(CSipCallModuleContext& context, TUniNetMsg* msg);
@@ -97,6 +102,20 @@ public:
     void onInvite(CSipCallModuleContext& context, TUniNetMsg* msg);
 };
 
+class CSipCallModState_RECVUPDATE:
+        public CSipCallModState_Default
+{
+public:
+    CSipCallModState_RECVUPDATE(const char *name, int stateId)
+	: CSipCallModState_Default(name, stateId)
+	{};
+
+	void onCancel(CSipCallModuleContext& context, TUniNetMsg* msg);
+	void onResponse(CSipCallModuleContext& context, TUniNetMsg* msg);
+	void onTimeOut(CSipCallModuleContext& context, TTimeMarkExt timerMark);
+};
+
+
 class CSipCallModState_CALLPROC :
     public CSipCallModState_Default
 {
@@ -106,6 +125,7 @@ public:
     {};
 
     void onCancel(CSipCallModuleContext& context, TUniNetMsg* msg);
+    void onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg);
     void onResponse(CSipCallModuleContext& context, TUniNetMsg* msg);
     void onTimeOut(CSipCallModuleContext& context, TTimeMarkExt timerMark);
 };
@@ -134,6 +154,7 @@ public:
     {};
 
     void onBye(CSipCallModuleContext& context, TUniNetMsg* msg);
+    void onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg);
     void onInvite(CSipCallModuleContext& context, TUniNetMsg* msg);
     void onInfo(CSipCallModuleContext& context, TUniNetMsg* msg);
 };

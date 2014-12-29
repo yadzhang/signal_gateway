@@ -1217,8 +1217,6 @@ BOOL CExosipStack::onSend_SIP_ACK(PCTUniNetMsg uniMsg)
 	//this->m_map_dialogid.getNext(did);
 
 	did = this->getDid(pCtrlMsg->from, pCtrlMsg->to, pCtrlMsg->sip_callId);
-	//printf("&&&&&callId == %s", pCtrlMsg->sip_callId.number.c_str());
-	//printf("&&&&&did = %d, len= %d\n", did, m_map_dialogid.size());
 
 	if (did != -1)
 	{
@@ -1274,10 +1272,12 @@ BOOL CExosipStack::onSend_SIP_ACK(PCTUniNetMsg uniMsg)
 //
 //			}
 
+			PTSipReq sipAck = (PTSipReq)uniMsg->msgBody;
+			ExosipTranslator::convertMCF2OsipReq(*sipAck, ack);
+
 			char * buf = NULL;
 			size_t len;
 			osip_message_to_str(ack, &buf, &len);
-			printf("****ACK:\n%s\n", buf);
 			ret = eXosip_call_send_ack(did, ack);
 
 			if (ret != OSIP_SUCCESS)

@@ -17,6 +17,10 @@ use utf-8 encoding to see the content
 1.modified domain setting, webrtc client should dail ims number or conference number without domain
 2.add UPDATE message body
 
+#Added on: 2014-12-29 by zhangyadong
+1.add sdp to OK and ACK message body
+2.add handle state for INFO and UPDATE to state machine 
+
 工程目录结构
 辅助文件目录:
 doc 存放有关文档,可使用make doc命令生成.
@@ -24,7 +28,7 @@ tools 为工程使用的工具
 test-tools 为测试工具
 源码目录:
 utils 为各子模块的公用函数
-src 为即时消息服务器代码
+
     
 使用方法:
 在根目录下使用make命令编译整个工程

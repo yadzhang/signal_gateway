@@ -59,12 +59,11 @@ void CSipToRtc::mapToRtcOffer(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
 	TRtcOffer* pRtcOffer = new TRtcOffer();
 	pRtcOffer->seq = atoi(pSipCtrl->cseq_number.c_str());
 	pRtcOffer->sdp = pSipInvite->body.content;
-	//		pRtcOffer->tieBreaker
 	pDestMsg->msgBody = pRtcOffer;
 	pDestMsg->setMsgBody();
 }
 
-void CSipToRtc::mapToRtcOk(TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
+void CSipToRtc::mapToRtcOk(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 		TSipCtrlMsg* pSipCtrl, bool isReCall) {
 	pDestMsg->msgName = RTC_OK;
 
@@ -84,7 +83,6 @@ void CSipToRtc::mapToRtcOk(TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 
 	pRtcCtrl->from = combineUserNameAndHost(pSipCtrl->from.url);
 	if(!isReCall){
-
 		pRtcCtrl->offerSessionId = pSipCtrl->from.tag;
 		pRtcCtrl->answerSessionId = pSipCtrl->to.tag;
 	}else{
@@ -92,11 +90,17 @@ void CSipToRtc::mapToRtcOk(TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 		pRtcCtrl->answerSessionId = pSipCtrl->from.tag;
 	}
 
+
+
+
 	pDestMsg->ctrlMsgHdr = pRtcCtrl;
 	pDestMsg->setCtrlMsgHdr();
 
+	TSipReq* pSipACK = (TSipReq*) (pSrcMsg->msgBody);
 	TRtcOK* pRtcOk = new TRtcOK();
 	pRtcOk->seq = atoi(pSipCtrl->cseq_number.c_str());
+	pRtcOk->sdp = pSipACK->body.content;
+
 	pDestMsg->msgBody = pRtcOk;
 	pDestMsg->setMsgBody();
 }
@@ -225,10 +229,14 @@ void CSipToRtc::mapToRtcAnswerOrError(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
 }
 
 
-void CSipToRtc::mapToRtcInfo(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
+void CSipToRtc::mapToRtcInfoOrUpdate(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 		TSipCtrlMsg* pSipCtrl,   const CVarChar128& caller,
 		const CVarChar128& callerHost, bool isReCall){
-	pDestMsg->msgName = RTC_INFO;
+
+	if(pSrcMsg->msgName == SIP_INFO)
+		pDestMsg->msgName = RTC_INFO;
+	else
+		pDestMsg->msgName = RTC_UPDATE;
 	if(m_accessMode == 1 || m_accessMode == 2){
 		CVarChar128 oldname = combineUserNameAndHost(pSipCtrl->to.url);
 		CVarChar128 newname = CUserMapHelper::getMapRtcUser(oldname);
@@ -264,23 +272,35 @@ void CSipToRtc::mapToRtcInfo(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg, TRtcCtrl
 
 	}
 
-	//CMsgMapHelper::storeSipCallID(pRtcCtrl->offerSessionId, pSipCtrl->sip_callId.number);
-
-	//		pRtcCtrl->answerSessionId = pSipCtrl->to.tag;
 	pDestMsg->ctrlMsgHdr = pRtcCtrl;
 	pDestMsg->setCtrlMsgHdr();
 
-	TSipInfo* pSipInfo = (TSipInfo*) (pSrcMsg->msgBody);
-	TRtcInfo* pRtcInfo = new TRtcInfo();
-	pRtcInfo->seq = atoi(pSipCtrl->cseq_number.c_str());
-	pRtcInfo->content_length = pSipInfo->body.content_length;
-	pRtcInfo->content = pSipInfo->body.content;
+	if(pDestMsg->msgName == RTC_INFO){
+		TSipInfo* pSipInfo = (TSipInfo*) (pSrcMsg->msgBody);
+		TRtcInfo* pRtcInfo = new TRtcInfo();
+		pRtcInfo->seq = atoi(pSipCtrl->cseq_number.c_str());
+		pRtcInfo->content_length = pSipInfo->body.content_length;
+		pRtcInfo->content = pSipInfo->body.content;
 
-	//		pRtcOffer->tieBreaker
-	pDestMsg->msgBody = pRtcInfo;
-	pDestMsg->setMsgBody();
+		//		pRtcOffer->tieBreaker
+		pDestMsg->msgBody = pRtcInfo;
+		pDestMsg->setMsgBody();
+	}
+	else{
+		TSipUpdate* pSipUpdate = (TSipUpdate*) (pSrcMsg->msgBody);
+		TRtcUpdate* pRtcUpdate = new TRtcUpdate();
+		pRtcUpdate->seq = atoi(pSipCtrl->cseq_number.c_str());
+		pRtcUpdate->content_length = pSipUpdate->body.content_length;
+		pRtcUpdate->content = pSipUpdate->body.content;
+
+		//		pRtcOffer->tieBreaker
+		pDestMsg->msgBody = pRtcUpdate;
+		pDestMsg->setMsgBody();
+	}
 
 }
+
+
 
 
 void CSipToRtc::mapToRtcMessage(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
@@ -298,7 +318,7 @@ void CSipToRtc::mapToRtcMessage(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
 		pRtcCtrl->to = combineUserNameAndHost(pSipCtrl->to.url);
 	}
 	pRtcCtrl->offerSessionId = pSipCtrl->from.tag;
-	// 存储 5-15
+
 	CMsgMapHelper::storeSipCallID(pRtcCtrl->offerSessionId, pSipCtrl->sip_callId.number);
 
 	pDestMsg->ctrlMsgHdr = pRtcCtrl;
@@ -329,7 +349,7 @@ BOOL CSipToRtc::msgMap(TUniNetMsg *pSrcMsg, TUniNetMsg *pDestMsg,
 		mapToRtcOffer(pSrcMsg, pDestMsg, pRtcCtrl, pSipCtrl, isReCall);
 		break;
 	case SIP_ACK:
-		mapToRtcOk(pDestMsg, pRtcCtrl, pSipCtrl, isReCall);
+		mapToRtcOk(pSrcMsg, pDestMsg, pRtcCtrl, pSipCtrl, isReCall);
 		break;
 	case SIP_BYE:
 	case SIP_CANCEL:
@@ -343,7 +363,7 @@ BOOL CSipToRtc::msgMap(TUniNetMsg *pSrcMsg, TUniNetMsg *pDestMsg,
 		mapToRtcMessage(pSrcMsg, pDestMsg, pRtcCtrl, pSipCtrl);
 		break;
 	case SIP_INFO:
-		mapToRtcInfo(pSrcMsg, pDestMsg, pRtcCtrl, pSipCtrl, caller, callerHost, isReCall);
+		mapToRtcInfoOrUpdate(pSrcMsg, pDestMsg, pRtcCtrl, pSipCtrl, caller, callerHost, isReCall);
 		break;
 	default:
 		printf("CSipToRtc::msgMap can not handle %s", pSrcMsg->getMsgNameStr());

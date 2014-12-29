@@ -274,7 +274,7 @@ public:
 	inline         TSipUpdate();
 
 	CHAR*          getMsgName(){ return "TSipUpdate";};
-	TSipInfo       &operator=(const TSipInfo &r);
+	TSipUpdate       &operator=(const TSipUpdate &r);
 	PTMsgBody      clone();
 	BOOL           operator == (TMsgPara&);
 

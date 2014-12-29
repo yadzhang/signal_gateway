@@ -968,7 +968,7 @@ PTMsgBody TSipUpdate::clone()
 	amsg->body                      = body;
 	return amsg;
 }
-TSipInfo& TSipUpdate::operator=(const TSipInfo &r)
+TSipUpdate& TSipUpdate::operator=(const TSipUpdate &r)
 {
 	req_uri                   = r.req_uri;
 	content_type              = r.content_type;
@@ -978,7 +978,7 @@ TSipInfo& TSipUpdate::operator=(const TSipInfo &r)
 
 BOOL TSipUpdate::operator == (TMsgPara& msg)
 {
-	COMPARE_MSG_BEGIN(TSipInfo,msg)
+	COMPARE_MSG_BEGIN(TSipUpdate,msg)
 
 	COMPARE_FORCE_NEST(TSipUpdate,TSipURI,req_uri)
 	COMPARE_FORCE_NEST(TSipUpdate,TSipContentType,content_type)

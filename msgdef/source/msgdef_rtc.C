@@ -251,7 +251,7 @@ INT TRtcAnswer::size()
 
 	tmpSize += sizeof(INT);
 	tmpSize += sdp.size();
-	tmpSize += sizeof(INT);
+	tmpSize += sizeof(BOOL);
 
 	return tmpSize;
 }
@@ -301,11 +301,13 @@ PTMsgBody TRtcOK::clone()
 {
 	PTRtcOK amsg = new TRtcOK();
 	amsg->seq                       = seq;
+	amsg->sdp						= sdp;
 	return amsg;
 }
 TRtcOK& TRtcOK::operator=(const TRtcOK &r)
 {
 	seq                       = r.seq;
+	sdp						  = r.sdp;
 	return *this;
 }
 
@@ -314,6 +316,7 @@ BOOL TRtcOK::operator == (TMsgPara& msg)
 	COMPARE_MSG_BEGIN(TRtcOK,msg)
 
 	COMPARE_FORCE_INT(TRtcOK,seq)
+	COMPARE_FORCE_VCHAR(TRtcOK,sdp);
 
 	COMPARE_END
 }
@@ -323,6 +326,7 @@ INT TRtcOK::size()
 	INT tmpSize = 0;
 
 	tmpSize += sizeof(INT);
+	tmpSize += sdp.size();
 
 	return tmpSize;
 }
@@ -330,6 +334,7 @@ INT TRtcOK::size()
 INT TRtcOK::encode(CHAR* &buf)
 {
 	ENCODE_INT( buf , seq )
+	sdp.encode(buf);
 
 	return size();
 }
@@ -337,6 +342,7 @@ INT TRtcOK::encode(CHAR* &buf)
 INT TRtcOK::decode(CHAR* &buf)
 {
 	DECODE_INT( seq, buf )
+	sdp.decode(buf);
 
 	return size();
 }
@@ -346,6 +352,7 @@ BOOL TRtcOK::decodeFromXML(TiXmlHandle& xmlParser,PCGFSM fsm)
 	FILL_FIELD_BEGIN
 
 	FILL_FORCE_INT(TRtcOK,seq)
+	FILL_FORCE_VCHAR(TRtcAnswer,sdp)
 
 	FILL_FIELD_END
 }
@@ -354,6 +361,7 @@ void TRtcOK::print(ostrstream& st)
 {
 	st<<"==| TRtcOK =="<<endl;
 	st<<"$seq                         = "<<seq<<endl;
+	st<<"$sdp						  = "<<sdp.GetVarCharContentPoint()<<endl;
 
 }
 
@@ -650,6 +658,88 @@ void TRtcInfo::print(ostrstream& st)
 	st<<"$content                  = "<<content.GetVarCharContentPoint()<<endl;
 
 }
+
+/////////////////////////////////////////////
+//           for class TRtcUpdate
+/////////////////////////////////////////////
+PTMsgBody TRtcUpdate::clone()
+{
+	PTRtcUpdate amsg = new TRtcUpdate();
+	amsg->seq 					 = seq;
+	amsg->content_length		 = content_length;
+	amsg->content				 = content;
+
+	return
+
+	amsg;
+}
+TRtcUpdate& TRtcUpdate::operator =(const TRtcUpdate &r)
+{
+	seq 				= r.seq;
+	content_length		= r.content_length;
+	content				= r.content;
+
+	return *this;
+}
+BOOL TRtcUpdate::operator == (TMsgPara& msg)
+{
+	COMPARE_MSG_BEGIN(TRtcUpdate, msg)
+
+	COMPARE_FORCE_INT(TRtcUpdate, seq)
+	COMPARE_FORCE_INT(TRtcUpdate, content_length)
+	COMPARE_FORCE_VCHAR(TRtcUpdate, content)
+
+	COMPARE_END
+}
+INT TRtcUpdate::size()
+{
+	INT tmpSize = 0;
+
+	tmpSize += sizeof(INT);
+	tmpSize += sizeof(INT);
+	tmpSize += content.size();
+
+	return tmpSize;
+}
+
+INT TRtcUpdate::encode(CHAR* &buf)
+{
+	ENCODE_INT( buf , seq )
+	ENCODE_INT( buf , content_length )
+	content.encode(buf);
+
+	return size();
+}
+
+INT TRtcUpdate::decode(CHAR* &buf)
+{
+	DECODE_INT( seq, buf )
+	DECODE_INT( content_length, buf )
+	content.decode(buf);
+
+	return size();
+}
+
+BOOL TRtcUpdate::decodeFromXML(TiXmlHandle& xmlParser,PCGFSM fsm)
+{
+	FILL_FIELD_BEGIN
+
+	FILL_FORCE_INT(TRtcUpdate,seq)
+	FILL_FORCE_INT(TRtcUpdate,content_length)
+	FILL_FORCE_VCHAR(TRtcUpdate,content)
+
+	FILL_FIELD_END
+}
+
+void TRtcUpdate::print(ostrstream& st)
+{
+	st<<"==| TRtcUpdate =="<<endl;
+	st<<"$seq                         = "<<seq<<endl;
+	st<<"$content_length                     = "<<content_length<<endl;
+	st<<"$content                  = "<<content.GetVarCharContentPoint()<<endl;
+
+}
+
 
 /////////////////////////////////////////////
 //           for class TRtcMessage

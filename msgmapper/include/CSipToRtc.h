@@ -20,7 +20,7 @@ private:
 	CSipToRtc();
 	void mapToRtcOffer(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
 			TRtcCtrlMsg* pRtcCtrl, TSipCtrlMsg* pSipCtrl, bool isReCall);
-	void mapToRtcOk(TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
+	void mapToRtcOk(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 			TSipCtrlMsg* pSipCtrl, bool isReCall);
 	void maoToRtcShutdown(TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 			TSipCtrlMsg* pSipCtrl, const CVarChar128& caller,
@@ -29,7 +29,7 @@ private:
 			TSipCtrlMsg* pSipCtrl, TRtcCtrlMsg* pRtcCtrl, bool isReCall);
 	void mapToRtcMessage(TUniNetMsg* pSrcMsg, TUniNetMsg* pDestMsg,
 			TRtcCtrlMsg* pRtcCtrl, TSipCtrlMsg* pSipCtrl);
-	void mapToRtcInfo(TUniNetMsg* pSrcMsg,TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
+	void mapToRtcInfoOrUpdate(TUniNetMsg* pSrcMsg,TUniNetMsg* pDestMsg, TRtcCtrlMsg* pRtcCtrl,
 			TSipCtrlMsg* pSipCtrl, const CVarChar128& caller,
 			const CVarChar128& callerHost, bool isReCall);
 

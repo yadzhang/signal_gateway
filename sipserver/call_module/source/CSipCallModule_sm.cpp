@@ -34,13 +34,20 @@ using namespace statemap;
 // Static class declarations.
 CSipCallModState_IDLE CSipCallModState::IDLE("CSipCallModState::IDLE", 0);
 CSipCallModState_CALLPROC CSipCallModState::CALLPROC("CSipCallModState::CALLPROC", 1);
-CSipCallModState_SUCCESS CSipCallModState::SUCCESS("CSipCallModState::SUCCESS", 2);
-CSipCallModState_ACTIVE CSipCallModState::ACTIVE("CSipCallModState::ACTIVE", 3);
-CSipCallModState_RELEASE CSipCallModState::RELEASE("CSipCallModState::RELEASE", 4);
-CSipCallModState_CLOSED CSipCallModState::CLOSED("CSipCallModState::CLOSED", 5);
+CSipCallModState_RECVUPDATE CSipCallModState::RECVUPDATE("CSipCallModState::RECVUPDATE", 2);
+CSipCallModState_SUCCESS CSipCallModState::SUCCESS("CSipCallModState::SUCCESS", 3);
+CSipCallModState_ACTIVE CSipCallModState::ACTIVE("CSipCallModState::ACTIVE", 4);
+CSipCallModState_RELEASE CSipCallModState::RELEASE("CSipCallModState::RELEASE", 5);
+CSipCallModState_CLOSED CSipCallModState::CLOSED("CSipCallModState::CLOSED", 6);
 
 
 void CSipCallModuleState::onInfo(CSipCallModuleContext& context, TUniNetMsg* msg)
+{
+	 Default(context);
+	 return;
+}
+
+void CSipCallModuleState::onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg)
 {
 	 Default(context);
 	 return;
@@ -97,6 +104,10 @@ void CSipCallModState_Default::onInvite(CSipCallModuleContext& context, TUniNetM
 
 
     return;
+}
+
+void CSipCallModState_Default::onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg){
+	return;
 }
 
 void CSipCallModState_Default::onResponse(CSipCallModuleContext& context, TUniNetMsg* msg)
@@ -200,6 +211,29 @@ void CSipCallModState_CALLPROC::onCancel(CSipCallModuleContext& context, TUniNet
     return;
 }
 
+void CSipCallModState_CALLPROC::onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg){
+	CSipCallModule& ctxt(context.getOwner());
+
+	(context.getState()).Exit(context);
+	context.clearState();
+	try
+	{
+		ctxt.stopTimer();
+		ctxt.sendToDispatcher(msg);
+		ctxt.setTimer(SIPCALL_200OK_TIMEOUT);
+		context.setState(CSipCallModState::RECVUPDATE);
+	}
+	catch (...)
+	{
+		context.setState(CSipCallModState::RECVUPDATE);
+		throw;
+	}
+	(context.getState()).Entry(context);
+
+	return;
+
+}
+
 void CSipCallModState_CALLPROC::onResponse(CSipCallModuleContext& context, TUniNetMsg* msg)
 {
     CSipCallModule& ctxt(context.getOwner());
@@ -282,6 +316,83 @@ void CSipCallModState_CALLPROC::onTimeOut(CSipCallModuleContext& context, TTimeM
 
     return;
 }
+
+void CSipCallModState_RECVUPDATE::onCancel(CSipCallModuleContext& context, TUniNetMsg* msg)
+{
+    CSipCallModule& ctxt(context.getOwner());
+
+    (context.getState()).Exit(context);
+    context.clearState();
+    try
+    {
+        ctxt.stopTimer();
+        ctxt.sendToDispatcher(msg);
+        ctxt.setTimer(SIPCALL_200OK_TIMEOUT);
+        context.setState(CSipCallModState::RELEASE);
+    }
+    catch (...)
+    {
+        context.setState(CSipCallModState::RELEASE);
+        throw;
+    }
+    (context.getState()).Entry(context);
+
+    return;
+}
+
+void CSipCallModState_RECVUPDATE::onResponse(CSipCallModuleContext& context, TUniNetMsg* msg)
+{
+    CSipCallModule& ctxt(context.getOwner());
+
+
+	TSipResp * sipResp = (TSipResp *) (msg->msgBody);
+	printf("mg update answer %d\n", sipResp->statusCode);
+	if(sipResp->body.content.length() == 0)
+	{
+		printf("mg update answer %d without sdp\n", sipResp->statusCode);
+	}
+	(context.getState()).Exit(context);
+	context.clearState();
+	try
+	{
+		ctxt.stopTimer();
+		ctxt.sendToDispatcher(msg);
+		ctxt.setTimer(SIPCALL_200OK_TIMEOUT);
+		context.setState(CSipCallModState::CALLPROC);
+	}
+	catch (...)
+	{
+		context.setState(CSipCallModState::CALLPROC);
+		throw;
+	}
+	(context.getState()).Entry(context);
+
+    return;
+}
+
+void CSipCallModState_RECVUPDATE::onTimeOut(CSipCallModuleContext& context, TTimeMarkExt timerMark)
+{
+    CSipCallModule& ctxt(context.getOwner());
+
+    (context.getState()).Exit(context);
+    context.clearState();
+    try
+    {
+        ctxt.handleTimeoutAtCallProcState();
+        ctxt.setTimer(SIPCALL_200OK_TIMEOUT);
+        context.setState(CSipCallModState::CALLPROC);
+    }
+    catch (...)
+    {
+        context.setState(CSipCallModState::CALLPROC);
+        throw;
+    }
+    (context.getState()).Entry(context);
+
+    return;
+}
+
+
 
 void CSipCallModState_SUCCESS::onAck(CSipCallModuleContext& context, TUniNetMsg* msg)
 {
@@ -442,6 +553,25 @@ void CSipCallModState_ACTIVE::onInfo(CSipCallModuleContext& context, TUniNetMsg*
 		 throw;
 	 }
 }
+
+void CSipCallModState_ACTIVE::onUpdate(CSipCallModuleContext& context, TUniNetMsg* msg){
+	 CSipCallModule& ctxt(context.getOwner());
+
+	 CSipCallModuleState& endState = context.getState();
+	 context.clearState();
+	 try
+	 {
+		 ctxt.sendBack200OK(msg);
+		 context.setState(CSipCallModState::ACTIVE);
+	  }
+	 catch (...)
+	 {
+		 context.setState(endState);
+		 throw;
+	 }
+}
+
+
 
 void CSipCallModState_ACTIVE::onBye(CSipCallModuleContext& context, TUniNetMsg* msg)
 {

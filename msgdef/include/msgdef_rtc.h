@@ -105,6 +105,7 @@ class TRtcOK:public TMsgBody
 {
 	public:
 		UINT           seq;
+		CVarChar       sdp;
 
 		inline         TRtcOK();
 
@@ -210,6 +211,30 @@ public:
 	void           print(ostrstream& st);
 };
 
+_CLASSDEF(TRtcUpdate)
+class TRtcUpdate:public TMsgBody
+{
+public:
+	UINT seq;
+	UINT content_length;
+	CVarChar content;
+
+	inline         TRtcUpdate();
+
+	CHAR*          getMsgName(){ return "TRtcUpdate";};
+	TRtcUpdate    &operator=(const TRtcUpdate &r);
+	PTMsgBody      clone();
+	BOOL           operator == (TMsgPara&);
+
+	INT            size();
+	INT            encode(CHAR* &buf);
+	INT            decode(CHAR* &buf);
+	BOOL           decodeFromXML(TiXmlHandle& xmlParser,PCGFSM fsm);
+
+	void           print(ostrstream& st);
+};
+
+
 
 _CLASSDEF(TRtcMessage)
 class TRtcMessage:public TMsgBody
@@ -276,6 +301,12 @@ inline TRtcCandidate::TRtcCandidate()
 }
 
 inline TRtcInfo::TRtcInfo()
+{
+	seq 					  = 0;
+	content_length 			  = 0;
+}
+
+inline TRtcUpdate::TRtcUpdate()
 {
 	seq 					  = 0;
 	content_length 			  = 0;

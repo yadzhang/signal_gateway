@@ -185,6 +185,16 @@ osip_message_t* convertMCF2OsipReq(RCTSipReq mcfReq, osip_message_t *req)
 {
 	convertMCF2OsipUri(mcfReq.req_uri, req->req_uri);
 
+	// body and content type
+	if (mcfReq.body.content_length > 0)
+	{
+		osip_message_set_body(req, mcfReq.body.content.c_str(),
+				mcfReq.body.content.length());
+
+		osip_message_set_content_type(req, CSipMsgHelper::toString(mcfReq.content_type).c_str());
+	}
+
+
 	return req;
 }
 

@@ -24,9 +24,11 @@ public:
 
 	static CRoapParser* createAnswer(string offerSessionId, string answerSessionId,
 			int seq, string sdp, bool moreComing);
-	static CRoapParser* createOK(string offerSessionId, string answerSessionId, int seq);
+	static CRoapParser* createOK(string offerSessionId, string answerSessionId, int seq, string sdp);
 	static CRoapParser* createShutdown(string offerSessionId, string answerSessionId, int seq);
 	static CRoapParser* createInfo(string offerSessionId, string answerSessionId,
+			int seq, int content_length, string content);
+	static CRoapParser* createUpdate(string offerSessionId, string answerSessionId,
 			int seq, int content_length, string content);
 
 

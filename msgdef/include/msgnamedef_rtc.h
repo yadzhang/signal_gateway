@@ -17,5 +17,7 @@ const TUniNetMsgName RTC_IM = 1056;
 
 const TUniNetMsgName RTC_INFO = 1057;
 
+const TUniNetMsgName RTC_UPDATE = 1058;
+
 
 #endif

@@ -163,6 +163,10 @@ void CRtcToSip::mapToSipAck(TUniNetMsg* pDestMsg, TUniNetMsg* pSrcMsg) {
 	TSipReq* pSipReq = new TSipReq();
 	pSipReq->req_uri = CSipMsgHelper::createSipURI("sip",
 			getUserName(pRtcCtrl->to).c_str(), getHost(pRtcCtrl->to).c_str(), NULL);
+	pSipReq->content_type = CSipMsgHelper::createSipContentType(
+			"application", "sdp");
+	pSipReq->body = CSipMsgHelper::createSipBody(pRtcOk->sdp);
+
 	pDestMsg->msgBody = pSipReq;
 	pDestMsg->setMsgBody();
 
@@ -194,6 +198,9 @@ void CRtcToSip::mapToSipAck(TUniNetMsg* pDestMsg, TUniNetMsg* pSrcMsg) {
 	pSipCtrl->to.url = CSipMsgHelper::createSipURI("sip", getUserName(pRtcCtrl->to).c_str(),
 			getHost(pRtcCtrl->to).c_str(), NULL);
 	pSipCtrl->to.tag = pRtcCtrl->answerSessionId;
+
+
+
 	// （3）via
 	// （4）route
 	// (5) CSeq_number and CSeq_method;
@@ -506,7 +513,6 @@ BOOL CRtcToSip::msgMapToSipError(TUniNetMsg *pSrcMsg, TUniNetMsg *pDestMsg, bool
 string CRtcToSip::getUserName(const CVarChar128& user){
 	string temp = user.c_str();
 	int i = temp.find('@');
-	printf("temp: %s\n", temp.c_str());
 	if(i != -1)
 		return (temp.substr(0, i));
 	else

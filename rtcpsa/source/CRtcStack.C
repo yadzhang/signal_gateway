@@ -14,7 +14,7 @@ CRtcStack::CRtcStack(INT psaid){
 
 	string tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("RTC_DOMAIN");
 	if(tmp == ""){
-		tmp = "domain1.com";
+		tmp = "webrtcdomain.com";
 	}
 	
 	strcpy(RTC_DOMAIN,tmp.c_str());
@@ -27,7 +27,7 @@ CRtcStack::CRtcStack(INT psaid){
 
 	tmp = CPropertiesManager::getInstance()->getProperties("gateway.env")->getProperty("confRealm");
 	if(tmp == ""){
-		tmp = "conf.com";
+		tmp = "imsconf.com";
 	}
 	strcpy(CONF_DOMAIN,tmp.c_str());
 
@@ -112,6 +112,7 @@ BOOL CRtcStack::convertMsgToUniNetMsg(string strMsg, PTUniNetMsg pMsg){
 			pMsg->msgName = RTC_OK;
 			PTRtcOK pMsgBody = new TRtcOK();
 			pMsgBody->seq = roapParser.getSeq();
+			pMsgBody->sdp = roapParser.getSdp().c_str();	//OK sdp,  re-offer->answer->OK
 			pMsg->msgBody = pMsgBody;
 			pMsg->setMsgBody();
 		}else if(roapType == ROAP_SHUTDOWN){
@@ -183,7 +184,7 @@ BOOL CRtcStack::convertUniMsgToPlainMsg(PTUniNetMsg uniMsg, string& plainMsg){
 			PTRtcOK pMsgOk = (PTRtcOK)uniMsg->msgBody;
 			roapParser = CRoapParser::createOK(pCtrlMsg->offerSessionId.c_str(),
 					pCtrlMsg->answerSessionId.c_str(),
-					pMsgOk->seq);
+					pMsgOk->seq, pMsgOk->sdp.c_str());
 			break;
 		}
 		//case RTC_ERROR:
@@ -202,6 +203,15 @@ BOOL CRtcStack::convertUniMsgToPlainMsg(PTUniNetMsg uniMsg, string& plainMsg){
 					pMsgInfo->seq, pMsgInfo->content_length, pMsgInfo->content.c_str());
 			break;
 		}
+
+		case RTC_UPDATE:
+		{
+			PTRtcUpdate pMsgUpdate = (PTRtcUpdate) uniMsg->msgBody;
+			roapParser = CRoapParser::createUpdate(pCtrlMsg->offerSessionId.c_str(), pCtrlMsg->answerSessionId.c_str(),
+					pMsgUpdate->seq, pMsgUpdate->content_length, pMsgUpdate->content.c_str());
+			break;
+		}
+
 		case RTC_SHUTDOWN:
 		{
 			PTRtcShutdown pMsgShutdown = (PTRtcShutdown)uniMsg->msgBody;
@@ -360,8 +370,17 @@ bool revedMsgShouldSendToMediaGW(const bool& isFromMg, PTUniNetMsg pMsg){
 bool toSendOnlySendToMediaGW(PTUniNetMsg uniMsg){
 	if(uniMsg->msgName == RTC_OFFER || uniMsg->msgName == RTC_ANSWER)
 		return isOfferAnswerWithCandidate(uniMsg);
-	if(uniMsg->msgName == RTC_INFO)
+	if(uniMsg->msgName == RTC_INFO || uniMsg->msgName == RTC_UPDATE)
 		return true;
+	if(uniMsg->msgName == RTC_OK)
+	{
+		TRtcOK * rtcOk = (TRtcOK*) uniMsg->msgBody;
+		if(rtcOk->sdp.length() == 0){
+			printf("RTC OK sdp length == 0!!!\n");
+			return true;
+		}
+	}
+
 	return false;
 }
 /* 来自mcf内核的消息，同时发给媒体网关和webrtc server
@@ -385,7 +404,6 @@ void CRtcStack::doActive(){
 		}
 
 		bool isFromMg = m_pSocket->isFromMg(sockfd);
-		printf("isFromMg %d\n", isFromMg);
 		printf("CRtcStack: recv msg from %d, and msgType %s\n", sockfd, pMsg->getMsgNameStr());
 
 		TRtcCtrlMsg *pCtrl = (TRtcCtrlMsg *)pMsg->ctrlMsgHdr;
@@ -419,8 +437,8 @@ void CRtcStack::doActive(){
 		}
 
 		if(pMsg->msgName == RTC_SHUTDOWN || pMsg->msgName == RTC_ERROR){
-					m_pSocket->deleteMgMap(offersessionId);
-				}
+			m_pSocket->deleteMgMap(offersessionId);
+		}
 
 		// 发送到mcf
 		PTMsg mcfMsg = new TMsg();

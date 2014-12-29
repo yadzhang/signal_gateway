@@ -153,8 +153,8 @@ CRoapParser* CRoapParser::createAnswer(string offerSessionId, string answerSessi
 	return create(ROAP_ANSWER, offerSessionId, answerSessionId, seq, sdp,
 			0, 0, "", moreComing, 0, "");
 }
-CRoapParser* CRoapParser::createOK(string offerSessionId, string answerSessionId, int seq){
-	return create(ROAP_OK, offerSessionId, answerSessionId, seq, "",
+CRoapParser* CRoapParser::createOK(string offerSessionId, string answerSessionId, int seq, string sdp){
+	return create(ROAP_OK, offerSessionId, answerSessionId, seq, sdp,
 				0, 0, "", false, 0, "");
 }
 CRoapParser* CRoapParser::createShutdown(string offerSessionId, string answerSessionId, int seq){
@@ -174,6 +174,11 @@ CRoapParser* CRoapParser::createCandidate(string offerSessionId, string answerSe
 CRoapParser* CRoapParser::createInfo(string offerSessionId, string answerSessionId,
 			int seq, int content_length, string content){
 	return create(ROAP_INFO, offerSessionId, answerSessionId, seq, "",
+			0, 0, "", false, content_length, content);
+}
+CRoapParser* CRoapParser::createUpdate(string offerSessionId, string answerSessionId,
+			int seq, int content_length, string content){
+	return create(ROAP_UPDATE, offerSessionId, answerSessionId, seq, "",
 			0, 0, "", false, content_length, content);
 }
 CRoapParser* CRoapParser::createMessage(string offerSessionId, string answerSessionId,
